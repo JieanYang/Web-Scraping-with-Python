@@ -3,7 +3,7 @@ import urllib.request as urllib2
 def download(url, num_retries=2):
 	print ('Downloading:',url)
 	try:
-		html = urllib2.urlopen(url).read()
+		html = urllib2.urlopen(url).read().decode('utf-8')
 	except urllib2.URLError as e:
 		print ('Download error:', e.reason)
 		html = None
