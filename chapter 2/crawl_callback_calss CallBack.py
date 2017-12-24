@@ -7,17 +7,19 @@ import urllib.robotparser as robotparser
 import queue as Queue
 import lxml.html
 from cssselect import GenericTranslator, SelectorError
+import csv
 
 
-def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1
-, headers=None, user_agent='wswp', proxy=None, num_retries=1, scrape_callback=None, num_callback=-1):
+def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1,
+ headers=None, user_agent='wswp', proxy=None, num_retries=1, scrape_callback=None):
     """Crawl from the given seed URL following links matched by link_regex
     """
     # the queue of URL's that still need to be crawled
 	# <class 'collections.deque'> for crawl_queue
+	#生成爬虫爬取url队列
     crawl_queue = Queue.deque([seed_url])
-    # the URL's that have been seen and at what
-	# depth
+    # the URL's that have been seen and at whatdepth
+	# 爬取深度
     seen = {seed_url: 0}
     # track how many URL's have been downloaded
     num_urls = 0
@@ -28,20 +30,22 @@ def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1
 	
     if user_agent:
         headers['User-agent'] = user_agent
-
+	#爬取队列开始爬取
     while crawl_queue:
+	#取出一个url
         url = crawl_queue.pop()
         # check url passes robots.txt restrictions
         if rp.can_fetch(user_agent, url):
             throttle.wait(url)
 			# num_retries 表示如果失败后的重复请求次数
+			#下载url的html
             html = download(url, headers, proxy=proxy, num_retries=num_retries)
             links = []
+			
             if scrape_callback:
-				# 如果前面是None, 则使用[]为参数
+				#extend 在list尾部追加多个值
                 links.extend(scrape_callback(url, html) or [])
-                if(num_callback == 1): break
-                num_callback -= 1
+				
             depth = seen[url]
             if depth != max_depth:
                 # can still crawl further
@@ -65,18 +69,25 @@ def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1
                 break
         else:
             print ('Blocked by robots.txt:', url)
+			
 
+			
+class ScrapeCallback:
+	def __init__(self):
+		self.writer = csv.writer(open('countries.csv', 'w'))
+		self.fields = ('area', 'population', 'iso', 'country', 'capital', 'continent'
+		, 'tld', 'currency_code', 'currency_name', 'phone', 'postal_code_format'
+		, 'postal_code_regex', 'languages', 'neighbours')
+		self.writer.writerow(self.fields)
 
-FIELDS = ('area', 'population', 'iso', 'country', 'capital', 'continent'
-, 'tld', 'currency_code', 'currency_name', 'phone', 'postal_code_format'
-, 'postal_code_regex', 'languages', 'neighbours')
-def scrape_callback(url, html):
-	if re.search('/view/', url):
-		tree = lxml.html.fromstring(html)
-		row = [tree.cssselect('table > tr#places_%s__row > td.w2p_fw'
-		% field)[0].text_content() for field in FIELDS]
-	print(url, row)
-
+	def __call__(self, url, html):
+		if re.search('/view/', url) and re.search('^((?!user).)*$', url):
+			tree = lxml.html.fromstring(html)
+			row = []
+			for field in self.fields:
+				row.append(tree.cssselect('table > tr#places_{}__row > td.w2p_fw'.format(field))[0].text_content())
+			self.writer.writerow(row)
+			
 class Throttle:
     """Throttle downloading by sleeping between requests to same domain
     """
@@ -156,4 +167,4 @@ def get_links(html):
 if __name__ == '__main__':
     #print(link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, num_retries=1, user_agent='BadCrawler'))
     #print(link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, num_retries=1, max_depth=1, user_agent='GoodCrawler'))
-	link_crawler('http://example.webscraping.com/places/default/view/239', '/(index|view)', scrape_callback = scrape_callback, num_callback=1)
+	link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, max_depth=-1, scrape_callback=ScrapeCallback())
