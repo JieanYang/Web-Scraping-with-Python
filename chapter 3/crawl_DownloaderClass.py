@@ -9,7 +9,8 @@ import lxml.html
 from cssselect import GenericTranslator, SelectorError
 import csv
 
-from DiskCache import DiskCache
+# from DiskCache import DiskCache
+from MongoCache import MongoCache
 
 
 def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, headers=None, user_agent='wswp', proxies=None, num_retries=1,\
@@ -205,7 +206,7 @@ if __name__ == '__main__':
 
 	start = time.clock()
 
-	link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, max_depth=-1, scrape_callback=ScrapeCallback(), cache=DiskCache())
+	link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, max_depth=-1, scrape_callback=ScrapeCallback(), cache=MongoCache())
 	
 	end = time.clock()
 	print ('时间:',end-start)

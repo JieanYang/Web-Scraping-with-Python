@@ -2,6 +2,10 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import pymongo
 
+import pickle
+import zlib
+from bson.binary import Binary
+
 class MongoCache:
 	def __init__(self, client=None, expires=timedelta(days=30)):
 		if client is None:
@@ -18,27 +22,18 @@ class MongoCache:
 		"""
 		record = self.db.webpage.find_one({'_id': url})
 		if record:
-			return record['result']
+			return pickle.loads(zlib.decompress(record['result']))
 		else:
 			raise AttributeError(url + " does not exist")
 			
 	def __setitem__(self, url, result):
 		"""Save value for this URL
 		"""
-		record = {'result': result, 'timestamp': datetime.utcnow()}
+		record = {
+			'result': Binary(zlib.compress(pickle.dumps(result))),
+			'timestamp': datetime.utcnow()
+		}
 		self.db.webpage.update({'_id': url},{'$set': record}, upsert=True)
 
-# print(int(timedelta(seconds=5).total_seconds()))
-# print(datetime.now())
-# print(datetime.utcnow())
-# 数据测试，失效时间为1s，实际情况下会有几分钟的延迟
-import time
-cache = MongoCache(expires=timedelta(seconds=1))
-url='baidu'
-result = {'html': 'what'}
-cache[url]=result
 
-while(True):	
-	print(cache[url])
-	time.sleep(10)
 
