@@ -2,6 +2,7 @@ import os
 import re
 from urllib import parse as urlparse
 import pickle
+import zlib
 
 class DiskCache:
 	def __init__(self, cache_dir='cache'):
@@ -38,9 +39,9 @@ class DiskCache:
 		if os.path.exists(path+'.pkl'):
 			with open(path+'.pkl', 'rb') as fp:
 				# 反序列化，恢复文件原始数据类型
-				return pickle.load(fp)
+				## return pickle.load(fp)
 				# 解压缩
-				## return pickle.loads(zlib.decompress(fp.read()))
+				return pickle.loads(zlib.decompress(fp.read()))
 		else:
 			#URL has not yet been cached
 			raise AttributeError(url + ' does not exist')
@@ -55,7 +56,6 @@ class DiskCache:
 			os.makedirs(folder)
 		with open(path+'.pkl', 'wb') as fp:
 			#pickle 会将输入转换成序列化字符串然后保存在磁盘中
-			## fp.write(pickle.dumps(result))
-			pickle.dump(result, fp)
+			## pickle.dump(result, fp)
 			# 使用压缩 节省磁盘空间
-			## fp.write(zlib.compress(pickle.dumps(result)))
+			fp.write(zlib.compress(pickle.dumps(result)))
