@@ -18,15 +18,16 @@ class DiskCache:
 		#对url进行处理生成适合的文件路径
 		path = components.path
 		if not path:
-			path = '/index.html'
+			path = '/index'
 		elif path.endswith('/'):
-			path += 'index.html'
+			path += 'index'
 		filename = components.netloc + path + components.query
 		#replace invalid characters
 		#文件系统对名字有规定
 		filename = re.sub('[^/0-9a-zA-Z\-.,;_]', '_', filename)
 		#retrict maximum number of characters
 		filename = '/'.join(segment[:255] for segment in filename.split('/'))
+		# 将多个路径组合后返回
 		return os.path.join(self.cache_dir, filename) # 返回url对应的文件路径
 		
 	def __getitem__(self, url):
@@ -34,8 +35,8 @@ class DiskCache:
 		Load data from disk for this URL
 		"""
 		path = self.url_to_path(url)
-		if os.path.exists(path):
-			with open(path, 'rb') as fp:
+		if os.path.exists(path+'.pkl'):
+			with open(path+'.pkl', 'rb') as fp:
 				# 反序列化，恢复文件原始数据类型
 				return pickle.load(fp)
 				# 解压缩
@@ -48,11 +49,13 @@ class DiskCache:
 		"""Save data to disk for this url
 		"""
 		path = self.url_to_path(url)
+		# 用于去掉文件名，返回目录所在的路径
 		folder = os.path.dirname(path)
 		if not os.path.exists(folder):
 			os.makedirs(folder)
-		with open(path, 'wb') as fp:
+		with open(path+'.pkl', 'wb') as fp:
 			#pickle 会将输入转换成序列化字符串然后保存在磁盘中
-			fp.write(pickle.dumps(result))
+			## fp.write(pickle.dumps(result))
+			pickle.dump(result, fp)
 			# 使用压缩 节省磁盘空间
 			## fp.write(zlib.compress(pickle.dumps(result)))
