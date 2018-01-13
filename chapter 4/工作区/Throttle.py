@@ -1,5 +1,6 @@
 import urllib.parse as urlparse
 from datetime import datetime
+import time
 
 class Throttle:
 	"""Throttle downloading by sleeping between requests to same domain

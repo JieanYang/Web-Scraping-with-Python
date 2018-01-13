@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import urllib.request as urllib2
-# file
 from Throttle import Throttle
 
 
 class Downloader:
-	def __init__(self, delay=5, user_agent='wswp', proxies=None, \
-	num_retries=1, cache=None):
+	def __init__(self, delay=5, user_agent='wswp', proxies=None, num_retries=1, cache=None):
 		self.throttle = Throttle(delay) # 时间推迟
 		self.user_agent = user_agent # 爬虫用户
 		self.proxies = proxies # 代理设置
@@ -22,8 +20,7 @@ class Downloader:
 				# url is not available in cache
 				pass
 			else:
-				if self.num_retries > 0 and \
-				500 <= result['code'] <600: # 下载下来的缓存不完整或有错误的，重置result
+				if self.num_retries > 0 and 500 <= result['code'] <600: # 下载下来的缓存不完整或有错误的，重置result
 					# server error so ignore result from cache
 					# and re-download
 					result = None
@@ -37,8 +34,7 @@ class Downloader:
 			else:
 				proxy = None
 			headers = {'User-agent': self.user_agent}
-			result = download(url, headers, proxy, \
-			self.num_retries)
+			result = download(url, headers, proxy, self.num_retries)
 			if self.cache: #如果缓存，则保存到cache字典里
 				# save result to cache
 				self.cache[url] = result
@@ -55,6 +51,7 @@ def download(url, headers, proxy, num_retries, data=None):
 		response = opener.open(request)
 		# 因为zip是二进制，所以去掉了decode语句
 		html = response.read() # .decode('utf-8')
+		html = html.decode('utf-8')
 		code = response.code
 	except urllib2.URLError as e:
 		print ('Download error:', e.reason)
