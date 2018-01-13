@@ -36,9 +36,9 @@ class Downloader:
 			headers = {'User-agent': self.user_agent}
 			result = download(url, headers, proxy, self.num_retries)
 			if self.cache: #如果缓存，则保存到cache字典里
-				# save result to cache
+				# 将数据存入Mongdb缓存， {'html': html, 'code': code }
 				self.cache[url] = result
-		return result['html']
+		return result['html'] # 返回html结果
 		
 def download(url, headers, proxy, num_retries, data=None):
 	print ('Downloading:', url)
