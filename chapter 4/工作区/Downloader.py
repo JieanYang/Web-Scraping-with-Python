@@ -51,7 +51,10 @@ def download(url, headers, proxy, num_retries, data=None):
 		response = opener.open(request)
 		# 因为zip是二进制，所以去掉了decode语句
 		html = response.read() # .decode('utf-8')
-		html = html.decode('utf-8')
+		if url == 'http://s3.amazonaws.com/alexa-static/top-1m.csv.zip':
+			html = '<html>'
+		else:
+			html = html.decode('utf-8')
 		code = response.code
 	except urllib2.URLError as e:
 		print ('Download error:', e.reason)

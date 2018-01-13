@@ -11,6 +11,7 @@ import queue as Queue
 
 from MongoCache import MongoCache
 from Downloader import Downloader
+from AlexaCallback import AlexaCallback
 
 
 def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, user_agent='wswp', proxies=None, num_retries=1, scrape_callback=None, cache=None):
@@ -32,7 +33,7 @@ def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, 
 		url = crawl_queue.pop()
 		depth = seen[url]
 		# check url passes robots.txt restrictions
-		if rp.can_fetch(user_agent, url):
+		if True: #rp.can_fetch(user_agent, url): # robot.txt 不允许会block在这
 			html = D(url) # D里面已经有延迟，爬虫身份，代理，重试次数和缓存功能, 返回html 文件
 			
 			links = []
@@ -43,7 +44,6 @@ def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, 
 			if depth != max_depth:
 				# can still crawl further
 				if link_regex:
-
 					# filter for links matching our regular expression
 					links.extend(link for link in get_links(html) if re.search(link_regex, link))
 
@@ -53,10 +53,9 @@ def link_crawler(seed_url, link_regex=None, delay=5, max_depth=-1, max_urls=-1, 
 					if link not in seen:
 						seen[link] = depth + 1
 						# check link is within same domain
-						if same_domain(seed_url, link):
+						# if same_domain(seed_url, link):  # 这里的domain都是不同的
 							# success! add this new link to queue
-							crawl_queue.append(link)
-
+						crawl_queue.append(link)
 			# check whether have reached downloaded maximum
 			num_urls += 1
 			if num_urls == max_urls:
@@ -102,7 +101,9 @@ if __name__ == '__main__':
 
 	start = time.clock()
 
-	link_crawler('http://example.webscraping.com', '/(index|view)', delay=1, max_depth=-1, scrape_callback=None, cache=MongoCache())
+	scrape_callback = AlexaCallback()
+	print(scrape_callback.seed_url)
+	link_crawler(seed_url=scrape_callback.seed_url, scrape_callback=scrape_callback, cache=MongoCache())
 	
 	end = time.clock()
 	print ('时间:',end-start)
